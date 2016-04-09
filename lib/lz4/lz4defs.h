@@ -22,9 +22,7 @@
  * Architecture-specific macros
  */
 #define BYTE	u8
-#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)		\
-	|| defined(CONFIG_ARM) && __LINUX_ARM_ARCH__ >= 6	\
-	&& defined(ARM_EFFICIENT_UNALIGNED_ACCESS)
+#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
 typedef struct _U32_S { u32 v; } U32_S;
 typedef struct _U64_S { u64 v; } U64_S;
 
