@@ -58,6 +58,7 @@ config IOSCHED_CFQ
 
 	  This is the default I/O scheduler.
 
+<<<<<<< HEAD
 config IOSCHED_BFQ
 	tristate "BFQ I/O scheduler"
 	default n
@@ -78,6 +79,13 @@ config CGROUP_BFQIO
 	  Enable hierarchical scheduling in BFQ, using the cgroups
 	  filesystem interface.  The name of the subsystem will be
 	  bfqio.
+
+config IOSCHED_FIOPS
+	tristate "IOPS based I/O scheduler"
+	default y
+	---help---
+	  This is an IOPS based I/O scheduler. It will try to distribute
+          IOPS equally among all processes in the system. It's mainly for Flash based storage.
 
 config CFQ_GROUP_IOSCHED
 	bool "CFQ Group Scheduling support"
@@ -125,6 +133,9 @@ choice
 		  any workload. It also tries to guarantee low latency to
 		  interactive and soft real-time applications.
 
+	config DEFAULT_FIOPS
+		bool "FIOPS" if IOSCHED_FIOPS=y
+
 endchoice
 
 config DEFAULT_IOSCHED
@@ -135,6 +146,7 @@ config DEFAULT_IOSCHED
 	default "noop" if DEFAULT_NOOP
  	default "maple" if DEFAULT_MAPLE
 	default "bfq" if DEFAULT_BFQ
+	default "fiops" if DEFAULT_FIOPS
 
 endmenu
 
