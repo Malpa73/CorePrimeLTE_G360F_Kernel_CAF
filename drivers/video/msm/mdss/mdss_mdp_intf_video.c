@@ -62,7 +62,7 @@ struct mdss_mdp_video_ctx {
 	u8 ref_cnt;
 
 	u8 timegen_en;
-	bool polling_en;
+	int polling_en;
 	u32 poll_cnt;
 	struct completion vsync_comp;
 	struct completion pp_comp;
