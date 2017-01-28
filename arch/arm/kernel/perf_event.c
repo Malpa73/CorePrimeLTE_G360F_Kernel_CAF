@@ -273,7 +273,7 @@ out:
 
 static int
 validate_event(struct pmu *pmu, struct pmu_hw_events *hw_events,
-				struct perf_event *event)
+			       struct perf_event *event)
 {
 	struct arm_pmu *armpmu;
 	struct pmu *leader_pmu = event->group_leader->pmu;
