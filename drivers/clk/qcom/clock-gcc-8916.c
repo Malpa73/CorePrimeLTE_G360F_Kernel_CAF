@@ -2771,8 +2771,12 @@ static struct clk_lookup msm_clocks_lookup[] = {
 static void gcc_gfx3d_fmax(struct platform_device *pdev)
 {
 	void __iomem *base;
-
+	
+#ifdef CONFIG_ARCH_MSM8916
+	u32 pte_efuse;
+#else
 	u32 pte_efuse, shift = 2, mask = 0x7;
+#endif
 	int bin, version;
 
 	base = devm_ioremap(&pdev->dev, EFUSE_BASE, SZ_8);
@@ -2793,7 +2797,13 @@ static void gcc_gfx3d_fmax(struct platform_device *pdev)
 	}
 	pte_efuse = readl_relaxed(base);
 	devm_iounmap(&pdev->dev, base);
+	
+#ifdef CONFIG_ARCH_MSM8916
+	bin = 2;
+	version =1;
+#else
 	bin = (pte_efuse >> shift) & mask;
+#endif
 
 	if (bin != 2)
 		return;
