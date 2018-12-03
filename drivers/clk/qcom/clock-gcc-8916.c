@@ -578,7 +578,7 @@ static struct rcg_clk vfe0_clk_src = {
 
 /* High Binned values */
 static struct clk_freq_tbl ftbl_gcc_oxili_gfx3d_465_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F(  50000000,  gpll0_aux,  16,	  0,	0),
 	F(  80000000,  gpll0_aux,  10,	  0,	0),
 	F( 100000000,  gpll0_aux,   8,	  0,	0),
@@ -600,7 +600,7 @@ static struct clk_freq_tbl ftbl_gcc_oxili_gfx3d_465_clk[] = {
 
 /* Low Binned values */
 static struct clk_freq_tbl ftbl_gcc_oxili_gfx3d_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F(  50000000,  gpll0_aux,  16,	  0,	0),
 	F(  80000000,  gpll0_aux,  10,	  0,	0),
 	F( 100000000,  gpll0_aux,   8,	  0,	0),
@@ -636,7 +636,7 @@ static struct rcg_clk gfx3d_clk_src = {
 };
 
 static struct clk_freq_tbl ftbl_gcc_blsp1_qup1_6_i2c_apps_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F(  50000000,	   gpll0,  16,	  0,	0),
 	F_END
 };
@@ -660,7 +660,7 @@ static struct clk_freq_tbl ftbl_gcc_blsp1_qup1_6_spi_apps_clk[] = {
 	F(   4800000,	      xo,   4,	  0,	0),
 	F(   9600000,	      xo,   2,	  0,	0),
 	F(  16000000,	   gpll0,  10,	  1,	5),
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F(  25000000,	   gpll0,  16,	  1,	2),
 	F(  50000000,	   gpll0,  16,	  0,	0),
 	F_END
@@ -825,7 +825,7 @@ static struct clk_freq_tbl ftbl_gcc_blsp1_uart1_6_apps_clk[] = {
 	F(   7372800,	   gpll0,   1,	144, 15625),
 	F(  14745600,	   gpll0,   1,	288, 15625),
 	F(  16000000,	   gpll0,  10,	  1,	5),
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F(  24000000,	   gpll0,   1,	  3,  100),
 	F(  25000000,	   gpll0,  16,	  1,	2),
 	F(  32000000,	   gpll0,   1,	  1,   25),
@@ -868,7 +868,7 @@ static struct rcg_clk blsp1_uart2_apps_clk_src = {
 };
 
 static struct clk_freq_tbl ftbl_gcc_camss_cci_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F_END
 };
 
@@ -1035,7 +1035,7 @@ static struct rcg_clk cpp_clk_src = {
 };
 
 static struct clk_freq_tbl ftbl_gcc_gp1_3_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F_END
 };
 
@@ -1100,7 +1100,8 @@ static struct rcg_clk byte0_clk_src = {
 };
 
 static struct clk_freq_tbl ftbl_gcc_mdss_esc0_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  12800000,	      xo,   1.5,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F_END
 };
 
@@ -1165,7 +1166,7 @@ static struct rcg_clk pclk0_clk_src = {
 };
 
 static struct clk_freq_tbl ftbl_gcc_mdss_vsync_clk[] = {
-	F(  19200000,	      xo,   1,	  0,	0),
+	F(  19200000,	      xo, 0.9,	  0,	0),
 	F_END
 };
 
