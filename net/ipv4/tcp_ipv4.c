@@ -82,6 +82,10 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 
+#if defined(CONFIG_SEC_DELLPC_FIT)
+#include <linux/inetdevice.h>
+#endif
+
 #include <linux/crypto.h>
 #include <linux/scatterlist.h>
 
@@ -1966,7 +1970,9 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	struct sock *sk;
 	int ret;
 	struct net *net = dev_net(skb->dev);
-
+#if defined(CONFIG_SEC_DELLPC_FIT)
+	struct in_device *in_dev;
+#endif
 	if (skb->pkt_type != PACKET_HOST)
 		goto discard_it;
 
@@ -2059,7 +2065,17 @@ csum_error:
 bad_packet:
 		TCP_INC_STATS_BH(net, TCP_MIB_INERRS);
 	} else {
+#if !defined(CONFIG_SEC_DELLPC_FIT)
 		tcp_v4_send_reset(NULL, skb);
+#else
+		in_dev = in_dev_get(skb->dev);
+		if (in_dev) {
+			if (!IN_DEV_FORWARD(in_dev))
+				tcp_v4_send_reset(NULL, skb);
+			in_dev_put(in_dev);
+		} else
+			tcp_v4_send_reset(NULL, skb);
+#endif
 	}
 
 discard_it:
@@ -2660,7 +2676,6 @@ static void get_tcp4_sock(struct sock *sk, struct seq_file *f, int i)
 	__be32 src = inet->inet_rcv_saddr;
 	__u16 destp = ntohs(inet->inet_dport);
 	__u16 srcp = ntohs(inet->inet_sport);
-	__u8 state = sk->sk_state;
 	int rx_queue;
 
 	if (icsk->icsk_pending == ICSK_TIME_RETRANS ||
@@ -2679,9 +2694,6 @@ static void get_tcp4_sock(struct sock *sk, struct seq_file *f, int i)
 		timer_expires = jiffies;
 	}
 
-	if (inet->transparent)
-		state |= 0x80;
-
 	if (sk->sk_state == TCP_LISTEN)
 		rx_queue = sk->sk_ack_backlog;
 	else
@@ -2692,7 +2704,7 @@ static void get_tcp4_sock(struct sock *sk, struct seq_file *f, int i)
 
 	seq_printf(f, "%4d: %08X:%04X %08X:%04X %02X %08X:%08X %02X:%08lX "
 			"%08X %5d %8d %lu %d %pK %lu %lu %u %u %d",
-		i, src, srcp, dest, destp, state,
+		i, src, srcp, dest, destp, sk->sk_state,
 		tp->write_seq - tp->snd_una,
 		rx_queue,
 		timer_active,
@@ -2896,7 +2908,6 @@ struct proto tcp_prot = {
 	.destroy_cgroup		= tcp_destroy_cgroup,
 	.proto_cgroup		= tcp_proto_cgroup,
 #endif
-	.diag_destroy		= tcp_abort,
 };
 EXPORT_SYMBOL(tcp_prot);
 

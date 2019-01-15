@@ -78,8 +78,15 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 		return addr;
 	}
 
-	if (len > TASK_SIZE)
+	if (len > TASK_SIZE){
+		printk(KERN_ERR "%s %d - (len > TASK_SIZE) len=%lx "
+			"TASK_SIZE=%lx pid=%d do_align=%d addr=%lx "
+			"mmap_base=%lx\n",
+			__func__, __LINE__,
+			len, TASK_SIZE, current->pid,
+			do_align, addr, mm->mmap_base);
 		return -ENOMEM;
+	}
 
 	if (addr) {
 		if (do_align)
@@ -99,7 +106,15 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	info.high_limit = TASK_SIZE;
 	info.align_mask = do_align ? (PAGE_MASK & (SHMLBA - 1)) : 0;
 	info.align_offset = pgoff << PAGE_SHIFT;
-	return vm_unmapped_area(&info);
+	addr = vm_unmapped_area(&info);
+	if (addr == -ENOMEM)
+		printk(KERN_ERR "%s %d - NOMEM from vm_unmapped_area "
+			"pid=%d flags=%lx length=%lx low_limit=%lx "
+			"high_limit=%lx align_mask=%lx align_offset %lx\n",
+			__func__, __LINE__,
+			current->pid, info.flags, info.length, info.low_limit,
+			info.high_limit, info.align_mask, info.align_offset);
+	return addr;
 }
 
 unsigned long
@@ -122,8 +137,15 @@ arch_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
 		do_align = filp || (flags & MAP_SHARED);
 
 	/* requested length too big for entire address space */
-	if (len > TASK_SIZE)
+	if (len > TASK_SIZE) {
+		printk(KERN_ERR "%s %d - "
+			"(len > TASK_SIZE) len=%lx TASK_SIZE=%lx "
+			 "pid=%d do_align=%d addr=%lx mmap_base=%lx\n",
+			__func__, __LINE__,
+			len, TASK_SIZE, current->pid, do_align,
+			addr, mm->mmap_base);
 		return -ENOMEM;
+	}
 
 	if (flags & MAP_FIXED) {
 		if (aliasing && flags & MAP_SHARED &&
@@ -165,7 +187,13 @@ arch_get_unmapped_area_topdown(struct file *filp, const unsigned long addr0,
 		info.high_limit = TASK_SIZE;
 		addr = vm_unmapped_area(&info);
 	}
-
+	if (addr == -ENOMEM)
+		printk(KERN_ERR "%s %d - NOMEM from vm_unmapped_area "
+			"pid=%d flags=%lx length=%lx low_limit=%lx "
+			"high_limit=%lx align_mask=%lx align_offset %lx\n",
+			__func__, __LINE__,
+			current->pid, info.flags, info.length, info.low_limit,
+			info.high_limit, info.align_mask, info.align_offset);
 	return addr;
 }
 
@@ -173,9 +201,10 @@ void arch_pick_mmap_layout(struct mm_struct *mm)
 {
 	unsigned long random_factor = 0UL;
 
+	/* 8 bits of randomness in 20 address space bits */
 	if ((current->flags & PF_RANDOMIZE) &&
 	    !(current->personality & ADDR_NO_RANDOMIZE))
-		random_factor = (get_random_long() & ((1UL << mmap_rnd_bits) - 1)) << PAGE_SHIFT;
+		random_factor = (get_random_int() % (1 << 8)) << PAGE_SHIFT;
 
 	if (mmap_is_legacy()) {
 		mm->mmap_base = TASK_UNMAPPED_BASE + random_factor;

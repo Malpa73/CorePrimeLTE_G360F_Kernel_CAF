@@ -23,6 +23,9 @@
 #include <asm/compiler.h>
 
 #include <soc/qcom/scm.h>
+#ifdef CONFIG_SEC_DEBUG
+#include <linux/sec_debug.h>
+#endif
 
 #define SCM_ENOMEM		-5
 #define SCM_EOPNOTSUPP		-4
@@ -47,15 +50,16 @@ static DEFINE_MUTEX(scm_lock);
 #define IS_CALL_AVAIL_CMD 1
 
 #define SCM_BUF_LEN(__cmd_size, __resp_size) ({ \
-	size_t x =  __cmd_size + __resp_size; \
-	size_t y = sizeof(struct scm_command) + sizeof(struct scm_response); \
-	size_t result; \
-	if (x < __cmd_size || (x + y) < x) \
-		result = 0; \
-	else \
-		result = x + y; \
-	result; \
-	})
+		size_t x = __cmd_size + __resp_size; \
+		size_t y = sizeof(struct scm_command) + sizeof(struct scm_response); \
+		size_t result; \
+		if (x < __cmd_size || (x + y) < x) \
+			result = 0; \
+		else \
+			result = x + y; \
+		result; \
+		})
+
 /**
  * struct scm_command - one SCM command buffer
  * @len: total available memory for command and response
@@ -108,7 +112,6 @@ struct scm_response {
 #define R3_STR "x3"
 #define R4_STR "x4"
 #define R5_STR "x5"
-#define R6_STR "x6"
 
 /* Outer caches unsupported on ARM64 platforms */
 #define outer_inv_range(x, y)
@@ -206,6 +209,14 @@ static u32 smc(u32 cmd_addr)
 	return r0;
 }
 
+#if defined(CONFIG_ARCH_MSM8916) || defined(CONFIG_ARCH_MSM8939) || defined(CONFIG_ARCH_MSM8226)
+static void __wrap_flush_cache_all(void* vp)
+{
+	flush_cache_all();
+}
+#endif
+
+
 static int __scm_call(const struct scm_command *cmd)
 {
 	int ret;
@@ -289,9 +300,18 @@ static int scm_call_common(u32 svc_id, u32 cmd_id, const void *cmd_buf,
 	if (cmd_buf)
 		memcpy(scm_get_command_buffer(scm_buf), cmd_buf, cmd_len);
 
+#ifdef CONFIG_SEC_DEBUG
+	sec_debug_secure_log(svc_id, cmd_id);
+#endif
+
 	mutex_lock(&scm_lock);
 	ret = __scm_call(scm_buf);
 	mutex_unlock(&scm_lock);
+
+#ifdef CONFIG_SEC_DEBUG	
+	sec_debug_secure_log(svc_id, cmd_id);
+#endif
+
 	if (ret)
 		return ret;
 
@@ -377,7 +397,6 @@ static int __scm_call_armv8_64(u64 x0, u64 x1, u64 x2, u64 x3, u64 x4, u64 x5,
 	register u64 r3 asm("r3") = x3;
 	register u64 r4 asm("r4") = x4;
 	register u64 r5 asm("r5") = x5;
-	register u64 r6 asm("r6") = 0;
 
 	do {
 		asm volatile(
@@ -391,15 +410,14 @@ static int __scm_call_armv8_64(u64 x0, u64 x1, u64 x2, u64 x3, u64 x4, u64 x5,
 			__asmeq("%7", R3_STR)
 			__asmeq("%8", R4_STR)
 			__asmeq("%9", R5_STR)
-			__asmeq("%10", R6_STR)
 #ifdef REQUIRES_SEC
 			".arch_extension sec\n"
 #endif
 			"smc	#0\n"
 			: "=r" (r0), "=r" (r1), "=r" (r2), "=r" (r3)
 			: "r" (r0), "r" (r1), "r" (r2), "r" (r3), "r" (r4),
-			  "r" (r5), "r" (r6)
-			: "x7", "x8", "x9", "x10", "x11", "x12", "x13",
+			  "r" (r5)
+			: "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13",
 			  "x14", "x15", "x16", "x17");
 	} while (r0 == SCM_INTERRUPTED);
 
@@ -422,7 +440,6 @@ static int __scm_call_armv8_32(u32 w0, u32 w1, u32 w2, u32 w3, u32 w4, u32 w5,
 	register u32 r3 asm("r3") = w3;
 	register u32 r4 asm("r4") = w4;
 	register u32 r5 asm("r5") = w5;
-	register u32 r6 asm("r6") = 0;
 
 	do {
 		asm volatile(
@@ -436,15 +453,14 @@ static int __scm_call_armv8_32(u32 w0, u32 w1, u32 w2, u32 w3, u32 w4, u32 w5,
 			__asmeq("%7", R3_STR)
 			__asmeq("%8", R4_STR)
 			__asmeq("%9", R5_STR)
-			__asmeq("%10", R6_STR)
 #ifdef REQUIRES_SEC
 			".arch_extension sec\n"
 #endif
 			"smc	#0\n"
 			: "=r" (r0), "=r" (r1), "=r" (r2), "=r" (r3)
 			: "r" (r0), "r" (r1), "r" (r2), "r" (r3), "r" (r4),
-			  "r" (r5), "r" (r6)
-			: "x7", "x8", "x9", "x10", "x11", "x12", "x13",
+			  "r" (r5)
+			: "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13",
 			"x14", "x15", "x16", "x17");
 
 	} while (r0 == SCM_INTERRUPTED);
@@ -611,7 +627,9 @@ static int allocate_extra_arg_buffer(struct scm_desc *desc, gfp_t flags)
 
 	return 0;
 }
-
+#ifdef CONFIG_TIMA_LKMAUTH
+pid_t pid_from_lkm = -1;
+#endif
 /**
  * scm_call2() - Invoke a syscall in the secure world
  * @fn_id: The function ID for this syscall
@@ -635,6 +653,7 @@ static int allocate_extra_arg_buffer(struct scm_desc *desc, gfp_t flags)
 */
 int scm_call2(u32 fn_id, struct scm_desc *desc)
 {
+	int call_from_ss_daemon;
 	int arglen = desc->arginfo & 0xf;
 	int ret, retry_count = 0;
 	u64 x0;
@@ -645,10 +664,33 @@ int scm_call2(u32 fn_id, struct scm_desc *desc)
 
 	x0 = fn_id | scm_version_mask;
 
+	/*
+	 * in case of secure_storage_daemon
+	*/
+	call_from_ss_daemon = (strncmp(current_thread_info()->task->comm, "secure_storage_daemon", TASK_COMM_LEN - 1) == 0);
+
+
 	do {
 		mutex_lock(&scm_lock);
 
 		desc->ret[0] = desc->ret[1] = desc->ret[2] = 0;
+
+#ifdef CONFIG_TIMA_LKMAUTH
+		if (call_from_ss_daemon || ( pid_from_lkm == current_thread_info()->task->pid)) {
+#else
+		if (call_from_ss_daemon) {
+#endif
+			flush_cache_all();
+
+#if defined(CONFIG_ARCH_MSM8916) || defined(CONFIG_ARCH_MSM8939) || defined(CONFIG_ARCH_MSM8226) || defined(CONFIG_ARCH_MSM8994)
+			smp_call_function((void (*)(void *))__wrap_flush_cache_all, NULL, 1);
+#endif
+
+#ifndef CONFIG_ARM64
+			outer_flush_all();
+#endif
+		}
+
 
 		if (scm_version == SCM_ARMV8_64)
 			ret = __scm_call_armv8_64(x0, desc->arginfo,
@@ -950,63 +992,6 @@ s32 scm_call_atomic4_3(u32 svc, u32 cmd, u32 arg1, u32 arg2,
 }
 EXPORT_SYMBOL(scm_call_atomic4_3);
 
-/**
- * scm_call_atomic5_3() - SCM command with five argument and three return value
- * @svc_id: service identifier
- * @cmd_id: command identifier
- * @arg1: first argument
- * @arg2: second argument
- * @arg3: third argument
- * @arg4: fourth argument
- * @arg5: fifth argument
- * @ret1: first return value
- * @ret2: second return value
- * @ret3: third return value
- *
- * This shall only be used with commands that are guaranteed to be
- * uninterruptable, atomic and SMP safe.
- */
-s32 scm_call_atomic5_3(u32 svc, u32 cmd, u32 arg1, u32 arg2,
-	u32 arg3, u32 arg4, u32 arg5, u32 *ret1, u32 *ret2, u32 *ret3)
-{
-	int ret;
-	int context_id;
-	register u32 r0 asm("r0") = SCM_ATOMIC(svc, cmd, 5);
-	register u32 r1 asm("r1") = (uintptr_t)&context_id;
-	register u32 r2 asm("r2") = arg1;
-	register u32 r3 asm("r3") = arg2;
-	register u32 r4 asm("r4") = arg3;
-	register u32 r5 asm("r5") = arg4;
-	register u32 r6 asm("r6") = arg5;
-
-	asm volatile(
-		__asmeq("%0", R0_STR)
-		__asmeq("%1", R1_STR)
-		__asmeq("%2", R2_STR)
-		__asmeq("%3", R3_STR)
-		__asmeq("%4", R0_STR)
-		__asmeq("%5", R1_STR)
-		__asmeq("%6", R2_STR)
-		__asmeq("%7", R3_STR)
-#ifdef REQUIRES_SEC
-			".arch_extension sec\n"
-#endif
-		"smc	#0\n"
-		: "=r" (r0), "=r" (r1), "=r" (r2), "=r" (r3)
-		: "r" (r0), "r" (r1), "r" (r2), "r" (r3), "r" (r4), "r" (r5),
-		 "r" (r6));
-	ret = r0;
-
-	if (ret1)
-		*ret1 = r1;
-	if (ret2)
-		*ret2 = r2;
-	if (ret3)
-		*ret3 = r3;
-	return r0;
-}
-EXPORT_SYMBOL(scm_call_atomic5_3);
-
 u32 scm_get_version(void)
 {
 	int context_id;
@@ -1169,3 +1154,22 @@ int scm_restore_sec_cfg(u32 device_id, u32 spare, int *scm_ret)
 	return 0;
 }
 EXPORT_SYMBOL(scm_restore_sec_cfg);
+
+int kap_status_scm_call(void)
+{
+    int ret;
+    struct scm_desc descrp = {0};
+    uint32_t resp = 4;
+
+    descrp.arginfo = SCM_ARGS(4, SCM_VAL, SCM_VAL, SCM_RW, SCM_VAL);
+    descrp.args[0] = CMD_READ_KAP_STATUS; //command Read
+    descrp.args[1] = 0;
+    descrp.args[2] = virt_to_phys((void*)&resp); // Respnse
+    descrp.args[3] = 4;
+
+    ret = scm_call2(MAKE_OEM_SCM_CMD(TZBSP_SVC_OEM_DMVERITY, OEM_DMVERITY_CMD_ID), &descrp);
+    if(!ret)
+	return descrp.ret[0];
+    return 0;
+}
+EXPORT_SYMBOL(kap_status_scm_call);

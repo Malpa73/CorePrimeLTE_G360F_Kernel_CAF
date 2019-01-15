@@ -102,12 +102,8 @@
 #define MDSS_MDP_HW_REV_109	MDSS_MDP_REV(1, 9, 0) /* 8994 v2.0 */
 #define MDSS_MDP_HW_REV_110	MDSS_MDP_REV(1, 10, 0) /* 8992 v1.0 */
 #define MDSS_MDP_HW_REV_200	MDSS_MDP_REV(2, 0, 0) /* 8092 v1.0 */
-#define MDSS_MDP_HW_REV_112	MDSS_MDP_REV(1, 12, 0) /* 8952 v1.0 */
-#define MDSS_MDP_HW_REV_111	MDSS_MDP_REV(1, 11, 0) /* 8956/76 v1.0 */
 
 enum {
-	NOTIFY_UPDATE_INIT,
-	NOTIFY_UPDATE_DEINIT,
 	NOTIFY_UPDATE_START,
 	NOTIFY_UPDATE_STOP,
 	NOTIFY_UPDATE_POWER_OFF,
@@ -184,13 +180,6 @@ enum {
 	NUM_HSIC_PARAM,
 };
 
-enum mdss_mdp_max_bw_mode {
-	MDSS_MAX_BW_LIMIT_DEFAULT = 0x1,
-	MDSS_MAX_BW_LIMIT_CAMERA = 0x2,
-	MDSS_MAX_BW_LIMIT_HFLIP = 0x4,
-	MDSS_MAX_BW_LIMIT_VFLIP = 0x8,
-};
-
 #define MDSS_MDP_ROT_ONLY		0x80
 #define MDSS_MDP_RIGHT_MIXER		0x100
 #define MDSS_MDP_DUAL_PIPE		0x200
@@ -235,12 +224,6 @@ enum mdss_mdp_max_bw_mode {
 #define MDP_SMP_FORCE_ALLOC		0x00200000
 #define MDP_TRANSP_NOP 0xffffffff
 #define MDP_ALPHA_NOP 0xff
-
-/*
- * MDP_DEINTERLACE & MDP_SHARPENING Flags are not valid for MDP3
- * so using them together for MDP_SMART_BLIT.
- */
-#define MDP_SMART_BLIT			0xC0000000
 
 #define MDP_FB_PAGE_PROTECTION_NONCACHED         (0)
 #define MDP_FB_PAGE_PROTECTION_WRITECOMBINE      (1)
@@ -318,7 +301,6 @@ struct mdp_blit_req {
 	uint32_t flags;
 	int sharpening_strength;  /* -127 <--> 127, default 64 */
 	uint8_t color_space;
-	uint32_t fps;
 };
 
 struct mdp_blit_req_list {
@@ -548,7 +530,6 @@ enum mdss_mdp_blend_op {
 	BLEND_OP_MAX,
 };
 
-#define DECIMATED_DIMENSION(dim, deci) (((dim) + ((1 << (deci)) - 1)) >> (deci))
 #define MAX_PLANES	4
 struct mdp_scale_data {
 	uint8_t enable_pxl_ext;
@@ -791,7 +772,6 @@ enum {
 	mdp_lut_igc,
 	mdp_lut_pgc,
 	mdp_lut_hist,
-	mdp_lut_rgb,
 	mdp_lut_max,
 };
 
@@ -812,20 +792,6 @@ struct mdp_pgc_lut_data {
 	struct mdp_ar_gc_lut_data *b_data;
 };
 
-/*
- * mdp_rgb_lut_data is used to provide parameters for configuring the
- * generic RGB lut in case of gamma correction or other LUT updation usecases
- */
-struct mdp_rgb_lut_data {
-	uint32_t flags;
-	uint32_t lut_type;
-	struct fb_cmap cmap;
-};
-
-enum {
-	mdp_rgb_lut_gc,
-	mdp_rgb_lut_hist,
-};
 
 struct mdp_lut_cfg_data {
 	uint32_t lut_type;
@@ -833,7 +799,6 @@ struct mdp_lut_cfg_data {
 		struct mdp_igc_lut_data igc_lut_data;
 		struct mdp_pgc_lut_data pgc_lut_data;
 		struct mdp_hist_lut_data hist_lut_data;
-		struct mdp_rgb_lut_data rgb_lut_data;
 	} data;
 };
 
