@@ -58,7 +58,6 @@ config IOSCHED_CFQ
 
 	  This is the default I/O scheduler.
 
-<<<<<<< HEAD
 config IOSCHED_BFQ
 	tristate "BFQ I/O scheduler"
 	default n
