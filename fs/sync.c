@@ -272,15 +272,11 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
 {
 	if (!fsync_enabled)
 		return 0;
-<<<<<<< HEAD
-		
-=======
 
 #ifdef CONFIG_DYNAMIC_FSYNC
 	if (likely(dyn_fsync_active && suspend_active))
 		return 0;
 #endif
->>>>>>> 19a9c981b61... fs: implement Dynamic FSync 2.0 (thx andip71)
 	if (!file->f_op || !file->f_op->fsync)
 		return -EINVAL;
 	return file->f_op->fsync(file, start, end, datasync);
@@ -433,15 +429,11 @@ SYSCALL_DEFINE1(fdatasync, unsigned int, fd)
 {
 	if (!fsync_enabled)
 		return 0;
-<<<<<<< HEAD
-		
-=======
 
 #ifdef CONFIG_DYNAMIC_FSYNC
 	if (likely(dyn_fsync_active && suspend_active))
 		return 0;
 #endif
->>>>>>> 19a9c981b61... fs: implement Dynamic FSync 2.0 (thx andip71)
 	return do_fsync(fd, 1);
 }
 
