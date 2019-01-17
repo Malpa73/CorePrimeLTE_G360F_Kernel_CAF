@@ -1128,7 +1128,11 @@ start_trb_queuing:
 				if (last_one)
 					break;
 			}
+<<<<<<< HEAD
 			dbg_queue(dep->number, &req->request, trbs_left);
+=======
+
+>>>>>>> 5e2152733f354c2ec2aa04e59deb920edae11db3
 			if (last_one)
 				break;
 		} else {
