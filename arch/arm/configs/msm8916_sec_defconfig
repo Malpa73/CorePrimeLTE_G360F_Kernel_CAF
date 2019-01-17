@@ -683,7 +683,6 @@ CONFIG_SECCOMP=y
 #optimize mmc block delay on resume
 CONFIG_MMC_BLOCK_DEFERRED_RESUME=y
 
-<<<<<<< HEAD
 # Qualcomm Atheros Prima WLAN module
 # CONFIG_PRIMA_WLAN is not set
 CONFIG_PRONTO_WLAN=m
