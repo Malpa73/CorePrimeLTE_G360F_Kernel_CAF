@@ -123,9 +123,6 @@ void __init early_print(const char *str, ...)
 	printk("%s", buf);
 }
 
-<<<<<<< HEAD
-void __init smp_setup_processor_id(void)
-=======
 struct cpuinfo_arm64 {
 	struct cpu	cpu;
 	u32		reg_midr;
@@ -140,7 +137,6 @@ void cpuinfo_store_cpu(void)
 }
 
 static void __init setup_processor(void)
->>>>>>> c67479ccb8b8b44c2dda5ca3e6315c9b9a16b4e1
 {
 	/*
 	 * clear __my_cpu_offset on boot CPU to avoid hang caused by
@@ -258,26 +254,8 @@ static void __init setup_processor(void)
 		pr_warn("L1_CACHE_BYTES smaller than the Cache Writeback Granule (%d < %d)\n",
 			L1_CACHE_BYTES, cls);
 
-<<<<<<< HEAD
-	/*
-	 * ID_AA64ISAR0_EL1 contains 4-bit wide signed feature blocks.
-	 * The blocks we test below represent incremental functionality
-	 * for non-negative values. Negative values are reserved.
-	 */
-	features = read_cpuid(ID_AA64ISAR0_EL1);
-	block = (features >> 4) & 0xf;
-	if (!(block & 0x8)) {
-		switch (block) {
-		default:
-		case 2:
-			elf_hwcap |= HWCAP_PMULL;
-		case 1:
-			elf_hwcap |= HWCAP_AES;
-		case 0:
-			break;
-		}
-	}
-=======
+	cpuinfo_store_cpu();
+
 	cpuinfo_store_cpu();
 
 	/* Check we have a non-NULL DT pointer */
@@ -286,7 +264,6 @@ static void __init setup_processor(void)
 			"Error: NULL or invalid device tree blob\n"
 			"The dtb must be 8-byte aligned and passed in the first 512MB of memory\n"
 			"\nPlease check your bootloader.\n");
->>>>>>> c67479ccb8b8b44c2dda5ca3e6315c9b9a16b4e1
 
 	block = (features >> 8) & 0xf;
 	if (block && !(block & 0x8))
@@ -518,14 +495,14 @@ static int c_show(struct seq_file *m, void *v)
 {
 	int i, j;
 
-<<<<<<< HEAD
-	for_each_present_cpu(i) {
-=======
 	for_each_online_cpu(i) {
 		struct cpuinfo_arm64 *cpuinfo = &per_cpu(cpu_data, i);
 		u32 midr = cpuinfo->reg_midr;
 
+<<<<<<< HEAD
 >>>>>>> c67479ccb8b8b44c2dda5ca3e6315c9b9a16b4e1
+=======
+>>>>>>> 35694109e577e6156cc01748e109453568fde7dd
 		/*
 		 * glibc reads /proc/cpuinfo to determine the number of
 		 * online processors, looking for lines beginning with
@@ -534,6 +511,7 @@ static int c_show(struct seq_file *m, void *v)
 #ifdef CONFIG_SMP
 		seq_printf(m, "processor\t: %d\n", i);
 #endif
+<<<<<<< HEAD
 <<<<<<< HEAD
 	}
 
@@ -568,6 +546,12 @@ static int c_show(struct seq_file *m, void *v)
 			   loops_per_jiffy / (500000UL/HZ),
 			   loops_per_jiffy / (5000UL/HZ) % 100);
 
+=======
+		seq_printf(m, "BogoMIPS\t: %lu.%02lu\n",
+			   loops_per_jiffy / (500000UL/HZ),
+			   loops_per_jiffy / (5000UL/HZ) % 100);
+
+>>>>>>> 35694109e577e6156cc01748e109453568fde7dd
 		/*
 		 * Dump out the common processor features in a single line.
 		 * Userspace should read the hwcaps with getauxval(AT_HWCAP)
@@ -594,7 +578,10 @@ static int c_show(struct seq_file *m, void *v)
 		seq_printf(m, "CPU part\t: 0x%03x\n", ((midr >> 4) & 0xfff));
 		seq_printf(m, "CPU revision\t: %d\n\n", (midr & 0xf));
 	}
+<<<<<<< HEAD
 >>>>>>> c67479ccb8b8b44c2dda5ca3e6315c9b9a16b4e1
+=======
+>>>>>>> 35694109e577e6156cc01748e109453568fde7dd
 
 	return 0;
 }

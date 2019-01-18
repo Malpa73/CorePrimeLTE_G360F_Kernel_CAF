@@ -564,7 +564,11 @@ static void get_prompt_str(struct gstr *r, struct property *prop,
 		for (j = 4; --i >= 0; j += 2) {
 			menu = submenu[i];
 			if (jump && menu == location)
+<<<<<<< HEAD
 				jump->offset = strlen(r->s);
+=======
+				jump->offset = r->len - 1;
+>>>>>>> 35694109e577e6156cc01748e109453568fde7dd
 			str_printf(r, "%*c-> %s", j, ' ',
 				   _(menu_get_prompt(menu)));
 			if (menu->sym) {
